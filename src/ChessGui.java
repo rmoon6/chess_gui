@@ -13,6 +13,14 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
+/**
+ * THIS DOES NOT INCLUDE THE EXTRA CREDIT FOR RIGHT NOW
+ *
+ * I knew pretty much nothing about javaFX before watching a tutorial by some hilarious guy
+ * named Bucky from upstate NY. Here is a link to it:
+ *
+ *      https://www.youtube.com/watch?v=q1LEN2assfU
+ */
 public class ChessGui extends Application {
 
     private static final String title = "Chess DB GUI";
