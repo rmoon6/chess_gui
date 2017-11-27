@@ -24,6 +24,23 @@ public class ChessGame {
         moves = new ArrayList<>();
     }
 
+
+    //this will be for displaying the information from the game in the new window
+    @Override
+    public String toString() {
+        return "Event: " + event + "\nSite: " + site + "\nDate: " + date + "\nWhite: " + white + "\nBlack: " + black
+                + "\nResult: " + result;
+    }
+
+    public String getMovesAsString() {
+        String outString = "";
+        for (String move : moves) {
+            outString += (move + "\n");
+        }
+        return outString;
+    }
+
+
     public void addMove(String move) {
         moves.add(move);
     }

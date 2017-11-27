@@ -1,16 +1,19 @@
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 /**
@@ -25,9 +28,11 @@ public class ChessGui extends Application {
 
     private static final String title = "Chess DB GUI";
 
-    private static TableView<ChessGame> table;
     private static ChessDb chessDb;
     private static ChessGui chessGui;
+
+    private static Scene sceneHome;
+    private static TableView<ChessGame> table;
 
     public static void main(String[] args) {
         table = new TableView<>();
@@ -38,10 +43,60 @@ public class ChessGui extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Scene scene = new Scene(new Group());
         stage.setTitle(title);
         stage.setWidth(1300);
-        stage.setHeight(500);
+        stage.setHeight(600);
+
+        initializeHomeScene(stage);
+
+        stage.setScene(sceneHome);
+        stage.show();
+    }
+
+    private static Scene getGameViewScene(Stage stage, ChessGame selectedGame) {
+
+        Scene gameViewScene = new Scene(new Group());
+
+        Text titleText = new Text();
+        titleText.setText("Breakdown of the game's moves:");
+
+        Text text = new Text();
+        text.setText("Event: " + selectedGame.getEvent() + "\n"
+                + "Site: " + selectedGame.getSite() + "\n"
+                + "Date: " + selectedGame.getDate() + "\n"
+                + "White: " + selectedGame.getWhite() + "\n"
+                + "Black: " + selectedGame.getBlack() + "\n"
+                + "Result: " + selectedGame.getResult() + "\n" + "\n"
+                + "Moves:\n" + selectedGame.getMovesAsString());
+
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setVmax(200);
+        scrollPane.setPrefSize(400, 440);
+        scrollPane.setContent(text);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+
+        Button backButton = new Button();
+        backButton.setText("Back");
+        backButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                stage.setScene(sceneHome);
+            }
+        });
+
+        final VBox vbox = new VBox();
+        vbox.setSpacing(5);
+        vbox.setPadding(new Insets(10, 0, 0, 10));
+        vbox.getChildren().addAll(titleText, scrollPane, backButton);
+
+        ((Group) gameViewScene.getRoot()).getChildren().addAll(vbox);
+
+        return gameViewScene;
+    }
+
+    private static void initializeHomeScene(Stage stage) {
+        sceneHome = new Scene(new Group());
 
         final Label label = new Label("Games");
         label.setFont(new Font("Arial", 20));
@@ -49,18 +104,41 @@ public class ChessGui extends Application {
         setColumns();
         table.setItems(getObservableListFromDb());
 
+        Button viewGameButton = new Button();
+        viewGameButton.setText("View Game");
+        viewGameButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                ChessGame selectedGame = table.getSelectionModel().getSelectedItem();
+                if (selectedGame != null) {
+                    stage.setScene(getGameViewScene(stage, selectedGame));
+                }
+            }
+        });
+
+        Button dismissButton = new Button();
+        dismissButton.setText("Dismiss");
+        dismissButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                System.exit(0);
+            }
+        });
+
+        final HBox hbox = new HBox();
+        hbox.setSpacing(5);
+        hbox.setPadding(new Insets(10, 0, 0, 10));
+        hbox.getChildren().addAll(viewGameButton, dismissButton);
+
         final VBox vbox = new VBox();
         vbox.setSpacing(5);
         vbox.setPadding(new Insets(10, 0, 0, 10));
-        vbox.getChildren().addAll(label, table);
+        vbox.getChildren().addAll(label, table, hbox);
 
-        ((Group) scene.getRoot()).getChildren().addAll(vbox);
-
-        stage.setScene(scene);
-        stage.show();
+        ((Group) sceneHome.getRoot()).getChildren().addAll(vbox);
     }
 
-    private ObservableList<ChessGame> getObservableListFromDb() {
+    private static ObservableList<ChessGame> getObservableListFromDb() {
         ObservableList<ChessGame> games = FXCollections.observableArrayList();
         games.add(chessDb.getGames().get(0));
         games.add(chessDb.getGames().get(1));
@@ -68,7 +146,7 @@ public class ChessGui extends Application {
         return games;
     }
 
-    private void setColumns() {
+    private static void setColumns() {
         TableColumn<ChessGame, StringProperty> event = new TableColumn<>("Event");
         event.setMinWidth(200);
         event.setCellValueFactory(new PropertyValueFactory<>("event"));
