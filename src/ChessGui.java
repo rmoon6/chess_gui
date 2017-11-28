@@ -15,6 +15,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.Collection;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,11 @@ public class ChessGui extends Application {
         stage.show();
     }
 
+    private enum Color {
+        BLACK,
+        WHITE
+    }
+
     //I'll start this out having a text field for site, and also some radio buttons for black or white won
     private static Scene getSearchScene(Stage stage) {
         Scene searchScene = new Scene(new Group());
@@ -68,13 +74,36 @@ public class ChessGui extends Application {
         textFieldHbox.setPadding(new Insets(10, 0, 0, 10));
         textFieldHbox.getChildren().addAll(siteLabel, siteSearch);
 
+        Label winnerLabel = new Label();
+        winnerLabel.setText("Winner:\t\t");
+        Label whiteLabel = new Label();
+        whiteLabel.setText("White");
+        RadioButton whiteRB = new RadioButton();
+        whiteRB.setUserData(Color.WHITE);
+        Label blackLabel = new Label();
+        blackLabel.setText("Black");
+        RadioButton blackRB = new RadioButton();
+        blackRB.setUserData(Color.BLACK);
+        ToggleGroup toggleGroup = new ToggleGroup();
+        whiteRB.setToggleGroup(toggleGroup);
+        blackRB.setToggleGroup(toggleGroup);
+
+        final HBox radioHbox = new HBox();
+        radioHbox.setSpacing(5);
+        radioHbox.setPadding(new Insets(10, 0, 0, 10));
+        radioHbox.getChildren().addAll(winnerLabel, whiteLabel, whiteRB, blackLabel, blackRB);
+
         Button submitButton = new Button();
         submitButton.setText("Submit");
         submitButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                currentFilter = chessGame -> siteSearch.getCharacters().length() == 0 ||
-                        chessGame.getSite().contains(siteSearch.getCharacters());
+                currentFilter = chessGame ->
+                        (siteSearch.getCharacters().length() == 0 || chessGame.getSite().contains(siteSearch.getCharacters()))
+                        &&
+                        (toggleGroup.getSelectedToggle() == null ||
+                                (toggleGroup.getSelectedToggle().getUserData() == Color.WHITE && chessGame.getResult().equals("1-0")) ||
+                                (toggleGroup.getSelectedToggle().getUserData() == Color.BLACK && chessGame.getResult().equals("0-1")));
                 stage.setScene(getHomeScene(stage));
             }
         });
@@ -96,7 +125,7 @@ public class ChessGui extends Application {
         final VBox vbox = new VBox();
         vbox.setSpacing(5);
         vbox.setPadding(new Insets(10, 0, 0, 10));
-        vbox.getChildren().addAll(titleText, textFieldHbox, buttonHbox);
+        vbox.getChildren().addAll(titleText, textFieldHbox, radioHbox, buttonHbox);
 
         ((Group) searchScene.getRoot()).getChildren().addAll(vbox);
 
