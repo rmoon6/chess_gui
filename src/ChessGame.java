@@ -109,7 +109,6 @@ public class ChessGame {
     public void addMove(String move) {
         moves.add(move);
         setOpening();
-        System.out.println(this.opening.toString());
     }
 
     public String getMove(int n) {

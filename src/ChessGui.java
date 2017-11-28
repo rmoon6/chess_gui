@@ -1,5 +1,4 @@
 import javafx.application.Application;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,7 +15,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * THIS DOES NOT INCLUDE THE EXTRA CREDIT FOR RIGHT NOW
@@ -32,12 +32,11 @@ public class ChessGui extends Application {
 
     private static ChessDb chessDb;
     private static ChessGui chessGui;
+    private static Predicate<ChessGame> currentFilter = chessGame -> true;
 
     private static Scene sceneHome;
-    private static TableView<ChessGame> table;
 
     public static void main(String[] args) {
-        table = new TableView<>();
         chessDb = new ChessDb();
         chessGui = new ChessGui();
         launch(args);
@@ -49,14 +48,63 @@ public class ChessGui extends Application {
         stage.setWidth(1500);
         stage.setHeight(600);
 
-        initializeHomeScene(stage);
-
-        stage.setScene(sceneHome);
+        stage.setScene(getHomeScene(stage));
         stage.show();
     }
 
-    private static Scene getGameViewScene(Stage stage, ChessGame selectedGame) {
+    //I'll start this out having a text field for site, and also some radio buttons for black or white won
+    private static Scene getSearchScene(Stage stage) {
+        Scene searchScene = new Scene(new Group());
 
+        Text titleText = new Text();
+        titleText.setText("Search:");
+
+        Label siteLabel = new Label();
+        siteLabel.setText("Site: ");
+        TextField siteSearch = new TextField();
+
+        final HBox textFieldHbox = new HBox();
+        textFieldHbox.setSpacing(5);
+        textFieldHbox.setPadding(new Insets(10, 0, 0, 10));
+        textFieldHbox.getChildren().addAll(siteLabel, siteSearch);
+
+        Button submitButton = new Button();
+        submitButton.setText("Submit");
+        submitButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                currentFilter = chessGame -> siteSearch.getCharacters().length() == 0 ||
+                        chessGame.getSite().contains(siteSearch.getCharacters());
+                stage.setScene(getHomeScene(stage));
+            }
+        });
+
+        Button backButton = new Button();
+        backButton.setText("Back");
+        backButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                stage.setScene(getHomeScene(stage));
+            }
+        });
+
+        final HBox buttonHbox = new HBox();
+        buttonHbox.setSpacing(5);
+        buttonHbox.setPadding(new Insets(10, 0, 0, 10));
+        buttonHbox.getChildren().addAll(backButton, submitButton);
+
+        final VBox vbox = new VBox();
+        vbox.setSpacing(5);
+        vbox.setPadding(new Insets(10, 0, 0, 10));
+        vbox.getChildren().addAll(titleText, textFieldHbox, buttonHbox);
+
+        ((Group) searchScene.getRoot()).getChildren().addAll(vbox);
+
+        return searchScene;
+
+    }
+
+    private static Scene getGameViewScene(Stage stage, ChessGame selectedGame) {
         Scene gameViewScene = new Scene(new Group());
 
         Text titleText = new Text();
@@ -97,40 +145,42 @@ public class ChessGui extends Application {
         return gameViewScene;
     }
 
-    private static void initializeHomeScene(Stage stage) {
+    private static Scene getHomeScene(Stage stage) {
         sceneHome = new Scene(new Group());
 
         final Label label = new Label("Games");
         label.setFont(new Font("Arial", 20));
 
-        setColumns();
+        TableView<ChessGame> table = new TableView<>();
+        setColumns(table);
         table.setItems(getObservableListFromDb());
 
         Button viewGameButton = new Button();
         viewGameButton.setText("View Game");
-        viewGameButton.setOnAction(new EventHandler<ActionEvent>() {
+        viewGameButton.setOnAction(event -> {
+            ChessGame selectedGame = table.getSelectionModel().getSelectedItem();
+            if (selectedGame != null) {
+                stage.setScene(getGameViewScene(stage, selectedGame));
+            }
+        });
+
+        Button searchButton = new Button();
+        searchButton.setText("Search");
+        searchButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                ChessGame selectedGame = table.getSelectionModel().getSelectedItem();
-                if (selectedGame != null) {
-                    stage.setScene(getGameViewScene(stage, selectedGame));
-                }
+                stage.setScene(getSearchScene(stage));
             }
         });
 
         Button dismissButton = new Button();
         dismissButton.setText("Dismiss");
-        dismissButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.exit(0);
-            }
-        });
+        dismissButton.setOnAction(event -> System.exit(0));
 
         final HBox hbox = new HBox();
         hbox.setSpacing(5);
         hbox.setPadding(new Insets(10, 0, 0, 10));
-        hbox.getChildren().addAll(viewGameButton, dismissButton);
+        hbox.getChildren().addAll(viewGameButton, searchButton, dismissButton);
 
         final VBox vbox = new VBox();
         vbox.setSpacing(5);
@@ -138,20 +188,21 @@ public class ChessGui extends Application {
         vbox.getChildren().addAll(label, table, hbox);
 
         ((Group) sceneHome.getRoot()).getChildren().addAll(vbox);
+
+        return sceneHome;
     }
 
     private static ObservableList<ChessGame> getObservableListFromDb() {
         ObservableList<ChessGame> games = FXCollections.observableArrayList();
-        games.add(chessDb.getGames().get(0));
-        games.add(chessDb.getGames().get(1));
 
-        System.out.println(chessDb.getGames().get(0).getOpening());
-        System.out.println(chessDb.getGames().get(1).getOpening());
+        for (ChessGame game : chessDb.getGames().stream().filter(currentFilter).collect(Collectors.toList())) {
+            games.add(game);
+        }
 
         return games;
     }
 
-    private static void setColumns() {
+    private static void setColumns(TableView<ChessGame> table) {
         TableColumn<ChessGame, StringProperty> event = new TableColumn<>("Event");
         event.setMinWidth(200);
         event.setCellValueFactory(new PropertyValueFactory<>("event"));
