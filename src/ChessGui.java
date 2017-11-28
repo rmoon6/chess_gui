@@ -16,6 +16,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 /**
  * THIS DOES NOT INCLUDE THE EXTRA CREDIT FOR RIGHT NOW
  *
@@ -44,7 +46,7 @@ public class ChessGui extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         stage.setTitle(title);
-        stage.setWidth(1300);
+        stage.setWidth(1500);
         stage.setHeight(600);
 
         initializeHomeScene(stage);
@@ -143,6 +145,9 @@ public class ChessGui extends Application {
         games.add(chessDb.getGames().get(0));
         games.add(chessDb.getGames().get(1));
 
+        System.out.println(chessDb.getGames().get(0).getOpening());
+        System.out.println(chessDb.getGames().get(1).getOpening());
+
         return games;
     }
 
@@ -171,13 +176,18 @@ public class ChessGui extends Application {
         result.setMinWidth(200);
         result.setCellValueFactory(new PropertyValueFactory<>("result"));
 
+        TableColumn<ChessGame, StringProperty> opening = new TableColumn<>("Opening");
+        opening.setMinWidth(200);
+        opening.setCellValueFactory(new PropertyValueFactory<>("opening"));
+
         table.getColumns().addAll(
                 event,
                 site,
                 date,
                 white,
                 black,
-                result
+                result,
+                opening
         );
     }
 }
