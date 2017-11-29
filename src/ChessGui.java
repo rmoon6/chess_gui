@@ -15,13 +15,14 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Collection;
+import java.util.Scanner;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- * THIS DOES NOT INCLUDE THE EXTRA CREDIT FOR RIGHT NOW
- *
  * I knew pretty much nothing about javaFX before watching a tutorial by some hilarious guy
  * named Bucky from upstate NY. Here is a link to it:
  *
@@ -48,6 +49,8 @@ public class ChessGui extends Application {
         stage.setTitle(title);
         stage.setWidth(1500);
         stage.setHeight(600);
+
+        readFilesIntoDb();
 
         stage.setScene(getHomeScene(stage));
         stage.show();
@@ -269,5 +272,81 @@ public class ChessGui extends Application {
                 result,
                 opening
         );
+    }
+
+    //this will take all of the files in the current working directory and add them into the chessDb
+    private void readFilesIntoDb() {
+        File[] files = new PgnFileFetcher().getFiles();
+
+        for (File f : files) {
+
+            String content = getContent(f);
+            ChessGame cg = new ChessGame(
+                    tagValue("Event", content),
+                    tagValue("Site", content),
+                    tagValue("Date", content),
+                    tagValue("White", content),
+                    tagValue("Black", content),
+                    tagValue("Result", content)
+            );
+
+            for (String move : getArrayOfMoves(content)) {
+                cg.addMove(move);
+            }
+
+            chessDb.addGame(cg);
+
+        }
+    }
+
+    private static String getContent(File file) {
+
+        String game;
+
+        try {
+            Scanner fileScanner = new Scanner(file);
+            game = fileScanner.useDelimiter("\\Z").next();
+        } catch (FileNotFoundException fnfe) {
+            fnfe.printStackTrace();
+            return "Something went wrong with the file";
+        }
+
+        return game;
+
+    }
+
+    private static String tagValue(String tagName, String game) {
+
+        String gameTags = game.split("\n\n")[0];
+
+        String[] gameTagsSplit = gameTags.split("\\n");
+        String line;
+        String[] lineSplit;
+
+        for (int i = 0; i < gameTagsSplit.length; i++) {
+            line = gameTagsSplit[i];
+            if (line.startsWith("[" + tagName)) {
+                lineSplit = line.split("\"");
+                return lineSplit[1];
+            }
+
+            if (!line.startsWith("[")) {
+                return "NOT GIVEN";
+            }
+        }
+
+        return "NOT GIVEN";
+    }
+
+    private static String[] getArrayOfMoves(String game) {
+        String moves = game.split("\n\n")[1];
+
+        String[] movesSplit = moves.split("[0-9]?[0-9]\\.");
+        String[] movesSplitOut = new String[movesSplit.length-1];
+        for (int i = 1; i < movesSplit.length; i++) {
+            movesSplitOut[i-1] = movesSplit[i].trim();
+        }
+
+        return movesSplitOut;
     }
 }

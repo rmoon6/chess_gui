@@ -15,6 +15,10 @@ public class ChessDb {
         return games;
     }
 
+    public void addGame(ChessGame chessGame) {
+        games.add(chessGame);
+    }
+
     private ChessGame morphyIsouard() {
         ChessGame game = new ChessGame(
                 "A Night at the Opera",
