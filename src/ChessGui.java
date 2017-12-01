@@ -17,7 +17,6 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Collection;
 import java.util.Scanner;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -139,11 +138,11 @@ public class ChessGui extends Application {
     private static Scene getGameViewScene(Stage stage, ChessGame selectedGame) {
         Scene gameViewScene = new Scene(new Group());
 
-        Text titleText = new Text();
-        titleText.setText("Breakdown of the game's moves:");
+        Text gameViewTitleText = new Text();
+        gameViewTitleText.setText("Breakdown of the game's moves:");
 
-        Text text = new Text();
-        text.setText("Event: " + selectedGame.getEvent() + "\n"
+        Text gameInfoText = new Text();
+        gameInfoText.setText("Event: " + selectedGame.getEvent() + "\n"
                 + "Site: " + selectedGame.getSite() + "\n"
                 + "Date: " + selectedGame.getDate() + "\n"
                 + "White: " + selectedGame.getWhite() + "\n"
@@ -152,11 +151,8 @@ public class ChessGui extends Application {
                 + "Moves:\n" + selectedGame.getMovesAsString());
 
         ScrollPane scrollPane = new ScrollPane();
-        scrollPane.setVmax(200);
         scrollPane.setPrefSize(400, 440);
-        scrollPane.setContent(text);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrollPane.setContent(gameInfoText);
 
         Button backButton = new Button();
         backButton.setText("Back");
@@ -167,12 +163,12 @@ public class ChessGui extends Application {
             }
         });
 
-        final VBox vbox = new VBox();
-        vbox.setSpacing(5);
-        vbox.setPadding(new Insets(10, 0, 0, 10));
-        vbox.getChildren().addAll(titleText, scrollPane, backButton);
+        final VBox sceneVbox = new VBox();
+        sceneVbox.setSpacing(5);
+        sceneVbox.setPadding(new Insets(10, 0, 0, 10));
+        sceneVbox.getChildren().addAll(gameViewTitleText, scrollPane, backButton);
 
-        ((Group) gameViewScene.getRoot()).getChildren().addAll(vbox);
+        ((Group) gameViewScene.getRoot()).getChildren().addAll(sceneVbox);
 
         return gameViewScene;
     }
@@ -180,17 +176,17 @@ public class ChessGui extends Application {
     private static Scene getHomeScene(Stage stage) {
         sceneHome = new Scene(new Group());
 
-        final Label label = new Label("Games");
-        label.setFont(new Font("Arial", 20));
+        final Label tableLabel = new Label("Games");
+        tableLabel.setFont(new Font("Arial", 20));
 
-        TableView<ChessGame> table = new TableView<>();
-        setColumns(table);
-        table.setItems(getObservableListFromDb());
+        TableView<ChessGame> gamesTable = new TableView<>();
+        setColumns(gamesTable);
+        gamesTable.setItems(getObservableListFromDb());
 
         Button viewGameButton = new Button();
         viewGameButton.setText("View Game");
         viewGameButton.setOnAction(event -> {
-            ChessGame selectedGame = table.getSelectionModel().getSelectedItem();
+            ChessGame selectedGame = gamesTable.getSelectionModel().getSelectedItem();
             if (selectedGame != null) {
                 stage.setScene(getGameViewScene(stage, selectedGame));
             }
@@ -209,17 +205,17 @@ public class ChessGui extends Application {
         dismissButton.setText("Dismiss");
         dismissButton.setOnAction(event -> System.exit(0));
 
-        final HBox hbox = new HBox();
-        hbox.setSpacing(5);
-        hbox.setPadding(new Insets(10, 0, 0, 10));
-        hbox.getChildren().addAll(viewGameButton, searchButton, dismissButton);
+        final HBox buttonsHbox = new HBox();
+        buttonsHbox.setSpacing(5);
+        buttonsHbox.setPadding(new Insets(10, 0, 0, 10));
+        buttonsHbox.getChildren().addAll(viewGameButton, searchButton, dismissButton);
 
-        final VBox vbox = new VBox();
-        vbox.setSpacing(5);
-        vbox.setPadding(new Insets(10, 0, 0, 10));
-        vbox.getChildren().addAll(label, table, hbox);
+        final VBox sceneVbox = new VBox();
+        sceneVbox.setSpacing(5);
+        sceneVbox.setPadding(new Insets(10, 0, 0, 10));
+        sceneVbox.getChildren().addAll(tableLabel, gamesTable, buttonsHbox);
 
-        ((Group) sceneHome.getRoot()).getChildren().addAll(vbox);
+        ((Group) sceneHome.getRoot()).getChildren().addAll(sceneVbox);
 
         return sceneHome;
     }
